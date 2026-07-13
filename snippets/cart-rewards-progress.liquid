@@ -384,16 +384,29 @@
 assign progress_percentage = 0
 
 if cart_total < tier1
-  assign progress_percentage = cart_total | times: 33.333 | divided_by: tier1
 
-elsif cart_total >= tier1 and cart_total < tier2
-  assign progress_percentage = 33.333
+  assign progress_percentage = cart_total | times: 16.66 | divided_by: tier1
 
-elsif cart_total >= tier2 and cart_total < tier3
-  assign progress_percentage = 66.666
+elsif cart_total < tier2
+
+  assign temp = cart_total | minus: tier1
+  assign range = tier2 | minus: tier1
+
+  assign progress_percentage = temp | times: 33.34 | divided_by: range
+  assign progress_percentage = progress_percentage | plus: 16.66
+
+elsif cart_total < tier3
+
+  assign temp = cart_total | minus: tier2
+  assign range = tier3 | minus: tier2
+
+  assign progress_percentage = temp | times: 33.33 | divided_by: range
+  assign progress_percentage = progress_percentage | plus: 50
 
 else
+
   assign progress_percentage = 100
+
 endif
 
   assign remaining_tier1 = tier1 | minus: cart_total
