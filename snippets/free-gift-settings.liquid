@@ -1,417 +1,50 @@
 {%- liquid
   assign theme_settings = settings
   assign reward_enabled = true
-
   if theme_settings.free_gift_enabled == false
     assign reward_enabled = false
   endif
 
-  # Get the current currency
-  assign current_currency = cart.currency.iso_code
-  assign shop_currency = shop.currency
-  
-  # Define base thresholds in USD
-  assign tier1_threshold_usd = theme_settings.tier1_threshold | default: 999
-  assign tier2_threshold_usd = theme_settings.tier2_threshold | default: 1499
-  assign tier3_threshold_usd = theme_settings.tier3_threshold | default: 1999
-  
-  # Set currency conversion rates (updated rates)
-  # You can update these rates as needed
-  assign usd_to_inr = 83.00
-  assign usd_to_eur = 0.92
-  assign usd_to_gbp = 0.79
-  
-  # Convert thresholds based on currency
-  if current_currency == "INR"
-    assign tier1_threshold = tier1_threshold_usd | times: usd_to_inr
-    assign tier2_threshold = tier2_threshold_usd | times: usd_to_inr
-    assign tier3_threshold = tier3_threshold_usd | times: usd_to_inr
-    assign currency_symbol = "₹"
-    assign currency_code = "INR"
-  elsif current_currency == "EUR"
-    assign tier1_threshold = tier1_threshold_usd | times: usd_to_eur
-    assign tier2_threshold = tier2_threshold_usd | times: usd_to_eur
-    assign tier3_threshold = tier3_threshold_usd | times: usd_to_eur
-    assign currency_symbol = "€"
-    assign currency_code = "EUR"
-  elsif current_currency == "GBP"
-    assign tier1_threshold = tier1_threshold_usd | times: usd_to_gbp
-    assign tier2_threshold = tier2_threshold_usd | times: usd_to_gbp
-    assign tier3_threshold = tier3_threshold_usd | times: usd_to_gbp
-    assign currency_symbol = "£"
-    assign currency_code = "GBP"
-  else
-    # Default to USD
-    assign tier1_threshold = tier1_threshold_usd
-    assign tier2_threshold = tier2_threshold_usd
-    assign tier3_threshold = tier3_threshold_usd
-    assign currency_symbol = "$"
-    assign currency_code = "USD"
-  endif
-
-  # Round thresholds to 2 decimal places
-  assign tier1_threshold = tier1_threshold | round: 2
-  assign tier2_threshold = tier2_threshold | round: 2
-  assign tier3_threshold = tier3_threshold | round: 2
-
-  # Gift variants
+  assign tier1_threshold = theme_settings.tier1_threshold | default: 999
+  assign tier2_threshold = theme_settings.tier2_threshold | default: 1499
+  assign tier3_threshold = theme_settings.tier3_threshold | default: 1999
   assign gift_product = theme_settings.gift_product
   assign gift_variant_tier1 = theme_settings.gift_variant_tier1 | default: '42928271982663'
   assign gift_variant_tier2 = theme_settings.gift_variant_tier2 | default: '42928272015431'
   assign gift_variant_tier3 = theme_settings.gift_variant_tier3 | default: '42928272048199'
-  
-  # Calculate cart total
-  assign cart_total_cents = 0
-  assign gift_in_cart = false
-  assign gift_tier_in_cart = 0
-
-  for item in cart.items
-    assign item_variant_id = item.variant.id | append: ''
-    if item.properties._gift == 'true' or item.properties._gift_tier != blank or item_variant_id == gift_variant_tier1 or item_variant_id == gift_variant_tier2 or item_variant_id == gift_variant_tier3
-      assign gift_in_cart = true
-      if item_variant_id == gift_variant_tier1
-        assign gift_tier_in_cart = 1
-      elsif item_variant_id == gift_variant_tier2
-        assign gift_tier_in_cart = 2
-      elsif item_variant_id == gift_variant_tier3
-        assign gift_tier_in_cart = 3
-      endif
-    else
-      assign cart_total_cents = cart_total_cents | plus: item.final_line_price
-    endif
-  endfor
-
-  # Get cart total in the shop's currency
-  assign cart_total = cart_total_cents | times: 1.0 | divided_by: 100
-  
-  # Determine current tier
-  assign current_tier = 0
-  if cart_total >= tier3_threshold
-    assign current_tier = 3
-  elsif cart_total >= tier2_threshold
-    assign current_tier = 2
-  elsif cart_total >= tier1_threshold
-    assign current_tier = 1
-  endif
-
-  # Calculate progress percentage (0-100%)
-  if cart_total <= 0
-    assign progress_percentage = 0
-  elsif cart_total >= tier3_threshold
-    assign progress_percentage = 100
-  else
-    assign progress_percentage = cart_total | times: 100.0 | divided_by: tier3_threshold
-  endif
-
-  if progress_percentage > 100
-    assign progress_percentage = 100
-  endif
-
-  # Calculate remaining amounts
-  assign remaining_tier1 = tier1_threshold | minus: cart_total
-  if remaining_tier1 < 0
-    assign remaining_tier1 = 0
-  endif
-  
-  assign remaining_tier2 = tier2_threshold | minus: cart_total
-  if remaining_tier2 < 0
-    assign remaining_tier2 = 0
-  endif
-  
-  assign remaining_tier3 = tier3_threshold | minus: cart_total
-  if remaining_tier3 < 0
-    assign remaining_tier3 = 0
-  endif
-
-  # Format currency for display
-  assign currency_symbol = cart.currency.symbol
-  if currency_symbol == blank
-    if current_currency == "INR"
-      assign currency_symbol = "₹"
-    elsif current_currency == "EUR"
-      assign currency_symbol = "€"
-    elsif current_currency == "GBP"
-      assign currency_symbol = "£"
-    else
-      assign currency_symbol = "$"
-    endif
-  endif
 -%}
 
 <script>
-window.rewardSettings = {
-  enabled: {{ reward_enabled | json }},
-  gift_product_id: {{ gift_product.id | json }},
-  currency: "{{ cart.currency.iso_code }}",
-  currency_symbol: "{{ currency_symbol }}",
-  currency_code: "{{ currency_code }}",
-  shopCurrency: "{{ shop.currency }}",
-  moneyFormat: {{ shop.money_format | json }},
-  
-  tiers: {
-    tier1: {
-      threshold: {{ tier1_threshold | times: 100 }},
-      variant_id: {{ gift_variant_tier1 | json }},
-      label: "0.50 CT Diamond Gift",
-      display_threshold: "{{ tier1_threshold | round: 2 }}",
-      display_amount: "{{ currency_symbol }}{{ tier1_threshold | round: 2 }}"
-    },
-    tier2: {
-      threshold: {{ tier2_threshold | times: 100 }},
-      variant_id: {{ gift_variant_tier2 | json }},
-      label: "0.75 CT Diamond Gift",
-      display_threshold: "{{ tier2_threshold | round: 2 }}",
-      display_amount: "{{ currency_symbol }}{{ tier2_threshold | round: 2 }}"
-    },
-    tier3: {
-      threshold: {{ tier3_threshold | times: 100 }},
-      variant_id: {{ gift_variant_tier3 | json }},
-      label: "1 CT Diamond Gift",
-      display_threshold: "{{ tier3_threshold | round: 2 }}",
-      display_amount: "{{ currency_symbol }}{{ tier3_threshold | round: 2 }}"
-    }
-  },
-  
-  free_shipping_threshold: {{ tier3_threshold | times: 100 }},
-  
-  current_cart_total: {{ cart_total_cents }},
-  current_tier: {{ current_tier }},
-  progress_percentage: {{ progress_percentage }},
-  
-  remaining: {
-    tier1: {{ remaining_tier1 | times: 100 }},
-    tier2: {{ remaining_tier2 | times: 100 }},
-    tier3: {{ remaining_tier3 | times: 100 }}
-  },
-  
-  messages: {
-    tier1_progress: {{ theme_settings.msg_tier1_progress | default: 'Spend {{ amount }} more to unlock FREE 0.50 CT Diamond' | json }},
-    tier1_unlocked: {{ theme_settings.msg_tier1_unlocked | default: 'Congratulations! You unlocked FREE 0.50 CT Diamond' | json }},
-    tier2_progress: {{ theme_settings.msg_tier2_progress | default: 'Spend {{ amount }} more to unlock FREE 0.75 CT Diamond' | json }},
-    tier2_unlocked: {{ theme_settings.msg_tier2_unlocked | default: 'Congratulations! You unlocked FREE 0.75 CT Diamond' | json }},
-    tier3_progress: {{ theme_settings.msg_tier3_progress | default: 'Spend {{ amount }} more to unlock FREE 1 CT Diamond + FREE Shipping' | json }},
-    tier3_unlocked: {{ theme_settings.msg_tier3_unlocked | default: 'Congratulations! You unlocked FREE 1 CT Diamond + FREE Shipping' | json }}
-  }
-};
-</script>
-
-<!-- Currency Display Helper Functions -->
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-  // Currency formatting function
-  function formatCurrency(amount, currencyCode) {
-    const currency = currencyCode || window.rewardSettings.currency || 'USD';
-    const symbol = window.rewardSettings.currency_symbol || '$';
-    
-    // Format based on currency
-    switch(currency) {
-      case 'INR':
-        return '₹' + amount.toFixed(2);
-      case 'EUR':
-        return '€' + amount.toFixed(2);
-      case 'GBP':
-        return '£' + amount.toFixed(2);
-      case 'USD':
-      default:
-        return '$' + amount.toFixed(2);
-    }
-  }
-
-  // Update all currency elements
-  function updateCurrencyDisplay() {
-    const elements = document.querySelectorAll('[data-currency-format]');
-    elements.forEach(function(el) {
-      const amount = parseFloat(el.dataset.amount);
-      const currency = el.dataset.currency || window.rewardSettings.currency;
-      if (!isNaN(amount)) {
-        el.textContent = formatCurrency(amount, currency);
+  window.rewardSettings = {
+    enabled: {{ reward_enabled | json }},
+    gift_product_id: {{ gift_product.id | json }},
+    tiers: {
+      tier1: {
+        threshold: {{ tier1_threshold | json }},
+        variant_id: {{ gift_variant_tier1 | json }},
+        label: '0.50 CT Diamond Gift'
+      },
+      tier2: {
+        threshold: {{ tier2_threshold | json }},
+        variant_id: {{ gift_variant_tier2 | json }},
+        label: '0.75 CT Diamond Gift'
+      },
+      tier3: {
+        threshold: {{ tier3_threshold | json }},
+        variant_id: {{ gift_variant_tier3 | json }},
+        label: '1 CT Diamond Gift'
       }
-    });
-  }
-
-  // Call on load
-  updateCurrencyDisplay();
-
-  // Expose function globally for dynamic updates
-  window.formatCurrency = formatCurrency;
-  window.updateCurrencyDisplay = updateCurrencyDisplay;
-});
-</script>
-
-<style>
-  /* Currency display styles */
-  .currency-amount {
-    font-weight: 700;
-    color: #c9a84c;
-  }
-  
-  .currency-symbol {
-    font-weight: 600;
-    margin-right: 2px;
-  }
-  
-  /* Currency-specific styling */
-  .currency-inr .currency-amount {
-    font-family: 'Inter', sans-serif;
-  }
-  
-  .currency-eur .currency-amount,
-  .currency-gbp .currency-amount {
-    font-family: 'Inter', sans-serif;
-  }
-  
-  /* Responsive currency display */
-  @media (max-width: 480px) {
-    .currency-amount {
-      font-size: 0.9em;
+    },
+    free_shipping_threshold: {{ tier3_threshold | json }},
+    messages: {
+      tier1_progress: {{ theme_settings.msg_tier1_progress | default: 'Spend ${{ amount }} more to unlock FREE 0.50 CT Diamond' | json }},
+      tier1_unlocked: {{ theme_settings.msg_tier1_unlocked | default: 'Congratulations! You unlocked a FREE 0.50 CT Diamond' | json }},
+      tier2_progress: {{ theme_settings.msg_tier2_progress | default: 'Spend ${{ amount }} more to unlock FREE 0.75 CT Diamond' | json }},
+      tier2_unlocked: {{ theme_settings.msg_tier2_unlocked | default: 'Congratulations! You unlocked a FREE 0.75 CT Diamond' | json }},
+      tier3_progress: {{ theme_settings.msg_tier3_progress | default: 'Spend ${{ amount }} more to unlock FREE 1 CT Diamond + FREE Shipping' | json }},
+      tier3_unlocked: {{ theme_settings.msg_tier3_unlocked | default: 'Congratulations! You unlocked FREE 1 CT Diamond + FREE Shipping' | json }},
+      free_shipping_unlocked: {{ theme_settings.msg_free_shipping_unlocked | default: 'FREE Shipping Unlocked' | json }},
+      free_shipping_progress: {{ theme_settings.msg_free_shipping_progress | default: 'Spend ${{ amount }} more to unlock FREE Shipping' | json }}
     }
-  }
-</style>
-
-<!-- Example usage in your HTML -->
-<div class="rewards-progress" data-currency="{{ current_currency }}">
-  <!-- Top Messages with Currency Support -->
-  <div class="rewards-top-messages">
-    {% if current_tier == 0 %}
-      <div class="top-message">
-        <p class="reward-title">
-          Spend
-          <span class="remaining-amount currency-amount" 
-                data-currency-format 
-                data-amount="{{ remaining_tier1 }}">
-            {{ currency_symbol }}{{ remaining_tier1 | round: 2 }}
-          </span>
-          more to unlock
-        </p>
-        <p class="reward-sub">
-          FREE 0.50 CT Diamond
-        </p>
-      </div>
-    {% elsif current_tier == 1 %}
-      <div class="top-message">
-        <h3>🎉 Congratulations!</h3>
-        <p class="reward-subtitle">
-          You've unlocked a
-          <strong>FREE 0.50 CT Diamond</strong>.
-        </p>
-        <p class="reward-next">
-          Spend
-          <span class="remaining-amount currency-amount" 
-                data-currency-format 
-                data-amount="{{ remaining_tier2 }}">
-            {{ currency_symbol }}{{ remaining_tier2 | round: 2 }}
-          </span>
-          more to unlock
-        </p>
-        <p class="reward-highlight">
-          FREE 0.75 CT Diamond
-        </p>
-      </div>
-    {% elsif current_tier == 2 %}
-      <div class="top-message">
-        <h3>🎉 Congratulations!</h3>
-        <p class="reward-subtitle">
-          You've unlocked a
-          <strong>FREE 0.75 CT Diamond</strong>.
-        </p>
-        <p class="reward-next">
-          Spend
-          <span class="remaining-amount currency-amount" 
-                data-currency-format 
-                data-amount="{{ remaining_tier3 }}">
-            {{ currency_symbol }}{{ remaining_tier3 | round: 2 }}
-          </span>
-          more to unlock
-        </p>
-        <p class="reward-highlight">
-          FREE 1 CT Diamond + FREE Shipping
-        </p>
-      </div>
-    {% else %}
-      <div class="top-message">
-        <h3>🎉 Congratulations!</h3>
-        <p class="reward-subtitle">
-          You unlocked
-        </p>
-        <div class="reward-items">
-          <span class="reward-item">✓ FREE 1 CT Diamond</span>
-          <span class="reward-item">✓ FREE Shipping</span>
-        </div>
-      </div>
-    {% endif %}
-  </div>
-
-  <!-- Progress Bar -->
-  <div class="progress-container">
-    <div class="progress-bar-wrapper">
-      <div class="progress-bar">
-        <div class="progress-bar__fill {% if current_tier == 3 %}complete{% endif %}" 
-             style="width: {{ progress_percentage }}%;">
-        </div>
-      </div>
-      
-      <!-- Connection Lines -->
-      <div class="progress-connections">
-        <div class="connection-line {% if current_tier >= 1 %}active{% endif %}"></div>
-        <div class="connection-line {% if current_tier >= 2 %}active{% endif %}"></div>
-      </div>
-      
-      <!-- Three Diamond Dots -->
-      <div class="progress-dots">
-        <!-- Dot 1 - Tier 1: 0.50 CT -->
-        <div class="progress-dot {% if current_tier >= 1 %}active{% endif %}">
-          <div class="dot-inner">
-            <img src="https://cdn.shopify.com/s/files/1/0689/2748/8071/files/images.png?v=1783144953" 
-                 alt="0.50 CT Diamond" 
-                 class="diamond-icon"
-                 width="18"
-                 height="18"
-                 loading="lazy">
-          </div>
-          <span class="dot-label currency-amount" 
-                data-currency-format 
-                data-amount="{{ tier1_threshold }}">
-            {{ currency_symbol }}{{ tier1_threshold | round: 0 }}
-          </span>
-          <span class="dot-label">0.50 CT Gift</span>
-        </div>
-        
-        <!-- Dot 2 - Tier 2: 0.75 CT -->
-        <div class="progress-dot {% if current_tier >= 2 %}active{% endif %}">
-          <div class="dot-inner">
-            <img src="https://cdn.shopify.com/s/files/1/0689/2748/8071/files/images.png?v=1783144953" 
-                 alt="0.75 CT Diamond" 
-                 class="diamond-icon"
-                 width="18"
-                 height="18"
-                 loading="lazy">
-          </div>
-          <span class="dot-label currency-amount" 
-                data-currency-format 
-                data-amount="{{ tier2_threshold }}">
-            {{ currency_symbol }}{{ tier2_threshold | round: 0 }}
-          </span>
-          <span class="dot-label">0.75 CT Gift</span>
-        </div>
-        
-        <!-- Dot 3 - Tier 3: 1.00 CT -->
-        <div class="progress-dot {% if current_tier >= 3 %}active{% endif %}">
-          <div class="dot-inner">
-            <img src="https://cdn.shopify.com/s/files/1/0689/2748/8071/files/images.png?v=1783144953" 
-                 alt="1 CT Diamond" 
-                 class="diamond-icon"
-                 width="18"
-                 height="18"
-                 loading="lazy">
-          </div>
-          <span class="dot-label currency-amount" 
-                data-currency-format 
-                data-amount="{{ tier3_threshold }}">
-            {{ currency_symbol }}{{ tier3_threshold | round: 0 }}
-          </span>
-          <span class="dot-label">1.00 CT Gift</span>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
+  };
+</script>
