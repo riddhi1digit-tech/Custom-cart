@@ -1,6 +1,7 @@
 {%- liquid
   assign theme_settings = settings
   assign reward_enabled = true
+
   if theme_settings.free_gift_enabled == false
     assign reward_enabled = false
   endif
@@ -8,43 +9,66 @@
   assign tier1_threshold = theme_settings.tier1_threshold | default: 999
   assign tier2_threshold = theme_settings.tier2_threshold | default: 1499
   assign tier3_threshold = theme_settings.tier3_threshold | default: 1999
+
   assign gift_product = theme_settings.gift_product
+
   assign gift_variant_tier1 = theme_settings.gift_variant_tier1 | default: '42928271982663'
   assign gift_variant_tier2 = theme_settings.gift_variant_tier2 | default: '42928272015431'
   assign gift_variant_tier3 = theme_settings.gift_variant_tier3 | default: '42928272048199'
 -%}
 
 <script>
-  window.rewardSettings = {
-    enabled: {{ reward_enabled | json }},
-    gift_product_id: {{ gift_product.id | json }},
-    tiers: {
-      tier1: {
-        threshold: {{ tier1_threshold | json }},
-        variant_id: {{ gift_variant_tier1 | json }},
-        label: '0.50 CT Diamond Gift'
-      },
-      tier2: {
-        threshold: {{ tier2_threshold | json }},
-        variant_id: {{ gift_variant_tier2 | json }},
-        label: '0.75 CT Diamond Gift'
-      },
-      tier3: {
-        threshold: {{ tier3_threshold | json }},
-        variant_id: {{ gift_variant_tier3 | json }},
-        label: '1 CT Diamond Gift'
-      }
+window.rewardSettings = {
+
+  enabled: {{ reward_enabled | json }},
+
+  gift_product_id: {{ gift_product.id | json }},
+
+  currency: "{{ cart.currency.iso_code }}",
+
+  shopCurrency: "{{ shop.currency }}",
+
+  moneyFormat: {{ shop.money_format | json }},
+
+  tiers: {
+
+    tier1: {
+      threshold: {{ tier1_threshold | times: 100 }},
+      variant_id: {{ gift_variant_tier1 | json }},
+      label: "0.50 CT Diamond Gift"
     },
-    free_shipping_threshold: {{ tier3_threshold | json }},
-    messages: {
-      tier1_progress: {{ theme_settings.msg_tier1_progress | default: 'Spend ${{ amount }} more to unlock FREE 0.50 CT Diamond' | json }},
-      tier1_unlocked: {{ theme_settings.msg_tier1_unlocked | default: 'Congratulations! You unlocked a FREE 0.50 CT Diamond' | json }},
-      tier2_progress: {{ theme_settings.msg_tier2_progress | default: 'Spend ${{ amount }} more to unlock FREE 0.75 CT Diamond' | json }},
-      tier2_unlocked: {{ theme_settings.msg_tier2_unlocked | default: 'Congratulations! You unlocked a FREE 0.75 CT Diamond' | json }},
-      tier3_progress: {{ theme_settings.msg_tier3_progress | default: 'Spend ${{ amount }} more to unlock FREE 1 CT Diamond + FREE Shipping' | json }},
-      tier3_unlocked: {{ theme_settings.msg_tier3_unlocked | default: 'Congratulations! You unlocked FREE 1 CT Diamond + FREE Shipping' | json }},
-      free_shipping_unlocked: {{ theme_settings.msg_free_shipping_unlocked | default: 'FREE Shipping Unlocked' | json }},
-      free_shipping_progress: {{ theme_settings.msg_free_shipping_progress | default: 'Spend ${{ amount }} more to unlock FREE Shipping' | json }}
+
+    tier2: {
+      threshold: {{ tier2_threshold | times: 100 }},
+      variant_id: {{ gift_variant_tier2 | json }},
+      label: "0.75 CT Diamond Gift"
+    },
+
+    tier3: {
+      threshold: {{ tier3_threshold | times: 100 }},
+      variant_id: {{ gift_variant_tier3 | json }},
+      label: "1 CT Diamond Gift"
     }
-  };
+
+  },
+
+  free_shipping_threshold: {{ tier3_threshold | times: 100 }},
+
+  messages: {
+
+    tier1_progress: {{ theme_settings.msg_tier1_progress | default: 'Spend {{ amount }} more to unlock FREE 0.50 CT Diamond' | json }},
+
+    tier1_unlocked: {{ theme_settings.msg_tier1_unlocked | default: 'Congratulations! You unlocked FREE 0.50 CT Diamond' | json }},
+
+    tier2_progress: {{ theme_settings.msg_tier2_progress | default: 'Spend {{ amount }} more to unlock FREE 0.75 CT Diamond' | json }},
+
+    tier2_unlocked: {{ theme_settings.msg_tier2_unlocked | default: 'Congratulations! You unlocked FREE 0.75 CT Diamond' | json }},
+
+    tier3_progress: {{ theme_settings.msg_tier3_progress | default: 'Spend {{ amount }} more to unlock FREE 1 CT Diamond + FREE Shipping' | json }},
+
+    tier3_unlocked: {{ theme_settings.msg_tier3_unlocked | default: 'Congratulations! You unlocked FREE 1 CT Diamond + FREE Shipping' | json }}
+
+  }
+
+};
 </script>
