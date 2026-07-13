@@ -5,9 +5,27 @@
     assign reward_enabled = false
   endif
 
-  assign tier1_threshold = theme_settings.tier1_threshold | default: 999
-  assign tier2_threshold = theme_settings.tier2_threshold | default: 1499
-  assign tier3_threshold = theme_settings.tier3_threshold | default: 1999
+  assign currency_code = cart.currency.iso_code | default: shop.currency
+
+  case currency_code
+    when 'INR'
+      assign tier1_threshold = theme_settings.tier1_threshold_inr | default: 4999
+      assign tier2_threshold = theme_settings.tier2_threshold_inr | default: 7999
+      assign tier3_threshold = theme_settings.tier3_threshold_inr | default: 9999
+    when 'EUR'
+      assign tier1_threshold = theme_settings.tier1_threshold_eur | default: 89
+      assign tier2_threshold = theme_settings.tier2_threshold_eur | default: 139
+      assign tier3_threshold = theme_settings.tier3_threshold_eur | default: 189
+    when 'GBP'
+      assign tier1_threshold = theme_settings.tier1_threshold_gbp | default: 79
+      assign tier2_threshold = theme_settings.tier2_threshold_gbp | default: 129
+      assign tier3_threshold = theme_settings.tier3_threshold_gbp | default: 169
+    else
+      assign tier1_threshold = theme_settings.tier1_threshold_usd | default: 999
+      assign tier2_threshold = theme_settings.tier2_threshold_usd | default: 1499
+      assign tier3_threshold = theme_settings.tier3_threshold_usd | default: 1999
+  endcase
+
   assign gift_product = theme_settings.gift_product
   assign gift_variant_tier1 = theme_settings.gift_variant_tier1 | default: '42928271982663'
   assign gift_variant_tier2 = theme_settings.gift_variant_tier2 | default: '42928272015431'
