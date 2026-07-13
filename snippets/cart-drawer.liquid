@@ -928,6 +928,37 @@ text-align:center;}
   </div>
 </cart-drawer>
 <script>
+  document.addEventListener('DOMContentLoaded', function() {
+  // Currency handling
+  const currencyCode = document.querySelector('.cart-drawer').dataset.currency;
+  
+  // Format currency based on code
+  function formatCurrency(amount, currency) {
+    const symbols = {
+      'USD': '$',
+      'INR': '₹',
+      'EUR': '€',
+      'GBP': '£',
+      'CAD': 'C$',
+      'AUD': 'A$'
+    };
+    
+    const symbol = symbols[currency] || '$';
+    
+    if (currency === 'INR') {
+      return symbol + amount.toFixed(2);
+    }
+    return symbol + amount.toFixed(2);
+  }
+  
+  // Update currency displays
+  document.querySelectorAll('[data-currency-display]').forEach(el => {
+    const amount = parseFloat(el.dataset.amount);
+    if (!isNaN(amount)) {
+      el.textContent = formatCurrency(amount, currencyCode);
+    }
+  });
+});
 (function() {
   'use strict';
 
