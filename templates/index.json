@@ -164,45 +164,10 @@
             "accent_color": "#5A4033"
           },
           "blocks": {}
-        },
-        "ai_gen_block_2ec0fe7_h6Rnww": {
-          "type": "ai_gen_block_2ec0fe7",
-          "name": "Editorial testimonial",
-          "settings": {
-            "eyebrow": "A STORY TO TREASURE",
-            "heading": "Made for the moments that matter.",
-            "testimonial": "<p>Share a genuine customer story here. A personal detail makes this editorial feature feel warm, memorable, and authentic.</p>",
-            "customer_name": "Customer name",
-            "customer_detail": "Verified customer",
-            "desktop_width_percent": 100,
-            "heading_font": "assistant_n4",
-            "background_color": "#F3F3F3",
-            "text_color": "#121212",
-            "accent_color": "#5A4033"
-          },
-          "blocks": {}
-        },
-        "ai_gen_block_2ec0fe7_k46FFx": {
-          "type": "ai_gen_block_2ec0fe7",
-          "settings": {
-            "eyebrow": "A STORY TO TREASURE",
-            "heading": "Made for the moments that matter.",
-            "testimonial": "<p>Share a genuine customer story here. A personal detail makes this editorial feature feel warm, memorable, and authentic.</p>",
-            "customer_name": "Customer name",
-            "customer_detail": "Verified customer",
-            "desktop_width_percent": 100,
-            "heading_font": "assistant_n4",
-            "background_color": "#F3F3F3",
-            "text_color": "#121212",
-            "accent_color": "#5A4033"
-          },
-          "blocks": {}
         }
       },
       "block_order": [
-        "ai_gen_block_2ec0fe7_at34a6",
-        "ai_gen_block_2ec0fe7_h6Rnww",
-        "ai_gen_block_2ec0fe7_k46FFx"
+        "ai_gen_block_2ec0fe7_at34a6"
       ],
       "settings": {}
     }
