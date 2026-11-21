@@ -36,6 +36,7 @@
         "button"
       ],
       "settings": {
+        "image": "shopify://shop_images/12e9651627c04c4c2d7b4fb6808f85d7887767ff_2.png",
         "image_overlay_opacity": 40,
         "image_height": "large",
         "image_behavior": "none",
