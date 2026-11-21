@@ -49,6 +49,32 @@
         "show_text_below": false
       }
     },
+    "1795243640e733cbc5": {
+      "type": "_blocks",
+      "blocks": {
+        "ai_gen_block_878b9c4_HWcN4y": {
+          "type": "ai_gen_block_878b9c4",
+          "settings": {
+            "heading": "Featured collections",
+            "description": "Explore our curated collections",
+            "collections": [
+              "rings",
+              "hydrogen",
+              "frontpage",
+              "diamond-shape",
+              "automated-collection"
+            ],
+            "show_product_count": false,
+            "desktop_width_percent": 100
+          },
+          "blocks": {}
+        }
+      },
+      "block_order": [
+        "ai_gen_block_878b9c4_HWcN4y"
+      ],
+      "settings": {}
+    },
     "multirow_teKUVJ": {
       "type": "multirow",
       "blocks": {
@@ -111,6 +137,7 @@
   },
   "order": [
     "image_banner",
+    "1795243640e733cbc5",
     "multirow_teKUVJ"
   ]
 }
