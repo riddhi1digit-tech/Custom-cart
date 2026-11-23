@@ -1,272 +1,938 @@
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Urbanist:wght@400;500;600;700&display=swap" rel="stylesheet">
+
 {%- liquid
-  assign sid = section.id
+  assign top_d = section.settings.top_image
+  assign top_m = section.settings.top_image_mobile | default: top_d
+  assign bottom_d = section.settings.bottom_image
+  assign bottom_m = section.settings.bottom_image_mobile | default: bottom_d
+  assign sign = section.settings.sign_image
+  assign view_all_url = section.settings.button_link
+
+  assign bg_d = section.settings.bg_image
+  assign bg_t = section.settings.bg_image_tablet | default: bg_d
+  assign bg_m = section.settings.bg_image_mobile | default: bg_t
+
+  assign overlay_opacity = section.settings.bg_overlay_opacity | divided_by: 100.0
+
+  assign pull_d = section.settings.sign_pull_desktop | divided_by: 19.2
+  assign pull_t = section.settings.sign_pull_tablet | divided_by: 9.9
+  assign pull_m = section.settings.sign_pull_mobile | divided_by: 4.25
+  assign snow_pull = section.settings.bottom_pull | divided_by: 19.2
+
+  comment
+    Space above the cards, entered in Figma pixels and converted to % of the section width,
+    so it scales with the screen: desktop frame 1920, tablet frame 990, mobile frame 425.
+  endcomment
+  assign pt_d = section.settings.slider_top_desktop | divided_by: 19.2
+  assign pt_t = section.settings.slider_top_tablet | divided_by: 9.9
+  assign pt_m = section.settings.slider_top_mobile | divided_by: 4.25
 -%}
 
 <style>
-  .tl-{{ sid }} {
-    --tl-accent: {{ section.settings.accent_color }};
-    --tl-text: {{ section.settings.text_color }};
-    --tl-muted: {{ section.settings.muted_color }};
-    --tl-line: {{ section.settings.line_color }};
-    --tl-bg: {{ section.settings.bg_color }};
-    box-sizing: border-box;
-    background: var(--tl-bg);
-    color: var(--tl-text);
-    padding: {{ section.settings.padding_top }}px 20px {{ section.settings.padding_bottom }}px;
-    margin: 20px 0;
-    overflow: hidden;
-  }
-  .tl-{{ sid }} *, .tl-{{ sid }} *::before, .tl-{{ sid }} *::after { box-sizing: border-box; }
-
-  /* ---------- Heading ---------- */
-  .tl-{{ sid }} .tl__head { max-width: 640px; margin: 0 auto 56px; text-align: center; }
-  .tl-{{ sid }} .tl__head h2 { margin: 0 0 12px; font-size: clamp(26px, 4vw, 40px); line-height: 1.15; font-weight: 600; }
-  .tl-{{ sid }} .tl__head p { margin: 0; color: var(--tl-muted); font-size: 16px; line-height: 1.6; }
-
-  /* ---------- Timeline ---------- */
-  .tl-{{ sid }} .tl__list { position: relative; max-width: 960px; margin: 0 auto; padding: 0; list-style: none; }
-
-  /* background line + animated progress line */
-  .tl-{{ sid }} .tl__list::before,
-  .tl-{{ sid }} .tl__progress {
-    content: "";
-    position: absolute;
-    top: 0; bottom: 0;
-    left: 27px;
-    width: 2px;
-    margin-left: -1px;
-    border-radius: 2px;
-  }
-  .tl-{{ sid }} .tl__list::before { background: var(--tl-line); }
-  .tl-{{ sid }} .tl__progress {
-    bottom: auto;
-    height: calc(var(--tl-progress, 0) * 100%);
-    background: var(--tl-accent);
-    z-index: 1;
-  }
-
-  .tl-{{ sid }} .tl__item {
+  /*
+    EVERYTHING IS SIZED IN cqw (1cqw = 1% of the section width), so the layout is a
+    scaled copy of the Figma frame on every screen.
+    Desktop: 991px and up | Tablet: 750px to 990px | Mobile: 749px and below (425px, 332px...)
+  */
+  .rts-{{ section.id }} {
+    --rts-bg: {{ section.settings.bg_color }};
+    --rts-bg-light: {{ section.settings.bg_color_light }};
+    --rts-text: {{ section.settings.text_color }};
+    --rts-scale: {{ section.settings.center_scale | divided_by: 100.0 }};
+    --rts-dur: {{ section.settings.speed }}ms;
+    --rts-ease: cubic-bezier(0.65, 0, 0.35, 1);
     position: relative;
-    display: grid;
-    grid-template-columns: 56px minmax(0, 1fr);
-    column-gap: 20px;
-    align-items: start;
-    padding-bottom: 44px;
+    overflow: hidden;
+    overflow: clip; /* clip does not stop the section growing with its content */
+    container-type: inline-size;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    color: var(--rts-text);
+    background-color: var(--rts-bg);
+    background-image: linear-gradient(0deg, var(--rts-bg-light) -8.55%, var(--rts-bg) 24.17%);
+    padding-bottom: {{ section.settings.padding_bottom }}px;
+    font-family: 'Urbanist', Arial, sans-serif;
   }
-  .tl-{{ sid }} .tl__item:last-child { padding-bottom: 0; }
 
-  /* icon bubble */
-  .tl-{{ sid }} .tl__icon {
+  /* ---------- Section background image (desktop / tablet / mobile) ---------- */
+  {%- if bg_d != blank -%}
+  {%- assign ov = section.settings.bg_overlay | color_modify: 'alpha', overlay_opacity -%}
+  .rts-{{ section.id }} {
+    background-image:
+      {%- if section.settings.bg_overlay_opacity > 0 %}
+      linear-gradient({{ ov }}, {{ ov }}),
+      {%- endif %}
+      url('{{ bg_d | image_url: width: 2560 }}');
+    background-repeat: no-repeat;
+    background-size: {{ section.settings.bg_size }};
+    background-position: center center;
+    aspect-ratio: {{ bg_d.aspect_ratio }};
+  }
+  @media (max-width: 990px) {
+    .rts-{{ section.id }} {
+      background-image:
+        {%- if section.settings.bg_overlay_opacity > 0 %}
+        linear-gradient({{ ov }}, {{ ov }}),
+        {%- endif %}
+        url('{{ bg_t | image_url: width: 1600 }}');
+      aspect-ratio: {{ bg_t.aspect_ratio }};
+    }
+  }
+  @media (max-width: 749px) {
+    .rts-{{ section.id }} {
+      background-image:
+        {%- if section.settings.bg_overlay_opacity > 0 %}
+        linear-gradient({{ ov }}, {{ ov }}),
+        {%- endif %}
+        url('{{ bg_m | image_url: width: 900 }}');
+      aspect-ratio: {{ bg_m.aspect_ratio }};
+    }
+  }
+  {%- endif -%}
+
+  /* ---------- Top garland: highest layer, so the sign ropes tuck behind it ---------- */
+  .rts-{{ section.id }} .rts__top,
+  .rts-{{ section.id }} .rts__bottom { position: relative; line-height: 0; flex: 0 0 auto; }
+  .rts-{{ section.id }} .rts__top { z-index: 5; pointer-events: none; }
+  .rts-{{ section.id }} .rts__top img,
+  .rts-{{ section.id }} .rts__bottom img {
+    display: block;
+    width: 100%;
+    height: auto;
+    pointer-events: none;
+    user-select: none;
+  }
+  .rts-{{ section.id }} .rts__bottom { margin-top: -{{ snow_pull }}cqw; z-index: 1; }
+
+  /* ---------- Layout (desktop: sign left, slider right) ---------- */
+  .rts-{{ section.id }} .rts__wrap {
     position: relative;
     z-index: 2;
-    grid-column: 1;
-    width: 56px; height: 56px;
+    box-sizing: border-box;
+    width: 100%;
+    flex: 1 0 auto;
+    margin: 0 auto;
+    display: grid;
+    align-items: start;
+    align-content: start;
+    padding: 0 4.7cqw 0 5.7cqw;
+    grid-template-columns: {{ section.settings.sign_width }}cqw minmax(0, 1fr);
+    column-gap: 2.6cqw;
+  }
+
+  /* ---------- Sign: sits BEHIND the garland, ropes go up under it ---------- */
+  .rts-{{ section.id }} .rts__sign-col {
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    align-self: start;
+    position: relative;
+    z-index: 1;
+    top: -{{ pull_d }}cqw;
+  }
+  .rts-{{ section.id }} .rts__sign {
+    position: relative;
+    width: 100%;
+    container-type: inline-size;
+    color: {{ section.settings.sign_text_color }};
+    font-family: 'Playfair Display', Georgia, serif;
+    text-align: center;
+  }
+  .rts-{{ section.id }} .rts__sign-img,
+  .rts-{{ section.id }} .rts__sign svg { display: block; width: 100%; height: auto; }
+
+  .rts-{{ section.id }} .rts__viewall {
+    position: absolute;
+    left: 0; right: 0;
+    bottom: {{ section.settings.button_bottom }}%;
+    text-align: center;
+  }
+  .rts-{{ section.id }} .rts__viewall a {
+    display: inline-flex;
+    align-items: center;
+    gap: 2cqw;
+    font-size: 6.4cqw;
+    font-weight: 600;
+    color: inherit;
+    text-decoration: none;
+    transition: transform 0.3s ease;
+  }
+  .rts-{{ section.id }} .rts__viewall a:hover { transform: translateX(3px); }
+  .rts-{{ section.id }} .rts__viewall a:focus-visible { outline: 2px solid #fff; outline-offset: 4px; }
+  {%- if section.settings.button_style == 'wooden' %}
+  .rts-{{ section.id }} .rts__viewall a {
+    padding: 2cqw 8cqw;
+    border: 2px solid #c79a62;
+    border-radius: 3cqw;
+    background: linear-gradient(180deg, #7a4a2a, #4b2b17);
+    box-shadow: 0 2px 6px rgba(0,0,0,.35);
+  }
+  {%- endif %}
+
+  /* ---------- Clickable area over the background image (invisible link) ---------- */
+  .rts-{{ section.id }} .rts__hit {
+    position: absolute;
+    z-index: 3;               /* above .rts__wrap (z-index 2) so it receives the click */
+    display: block;
+    left: {{ section.settings.hit_left }}%;
+    top: {{ section.settings.hit_top }}%;
+    width: {{ section.settings.hit_width }}%;
+    height: {{ section.settings.hit_height }}%;
+    {%- if request.design_mode %}
+    outline: 2px dashed rgba(255,255,255,.7);
+    {%- endif %}
+  }
+
+  /* ---------- Slider ---------- */
+  .rts-{{ section.id }} .rts__slider {
+    --rts-g: 4cqw;                            /* side gutter that holds the arrow */
+    --rts-a: clamp(30px, 2cqw, 38px);         /* arrow size */
+    --rts-pt: {{ pt_d }}cqw;                  /* space above the cards (Slider position setting) */
+    --rts-pb: 3.5cqw;                         /* space below the cards */
+    --rts-ax: calc((var(--rts-g) - var(--rts-a)) / 2);
+    position: relative;
+    min-width: 0;
+    padding: 0 var(--rts-g);
+  }
+  .rts-{{ section.id }} .rts__viewport {
+    overflow: hidden;
+    padding: var(--rts-pt) 0 var(--rts-pb);
+    touch-action: pan-y;
+    cursor: grab;
+    outline-offset: -2px;
+  }
+  .rts-{{ section.id }} .rts__viewport:active { cursor: grabbing; }
+  .rts-{{ section.id }} .rts__track {
+    display: flex;
+    align-items: flex-start;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    opacity: 0;
+    will-change: transform;
+    transition: transform var(--rts-dur) var(--rts-ease), opacity 0.4s ease;
+  }
+  .rts-{{ section.id }}.is-ready .rts__track { opacity: 1; }
+  .rts-{{ section.id }} .rts__slide { flex: 0 0 auto; position: relative; }
+  .rts-{{ section.id }} .rts__slide.is-active { z-index: 2; }
+
+  /* scale from the TOP so every card top stays on the same line (desktop only) */
+  .rts-{{ section.id }} .rts__card {
+    text-align: center;
+    transform-origin: top center;
+    transition: transform var(--rts-dur) var(--rts-ease);
+  }
+  @media (min-width: 991px) {
+    .rts-{{ section.id }} .rts__slide.is-active .rts__card { transform: scale(var(--rts-scale)); }
+  }
+  .rts-{{ section.id }}.is-jumping .rts__card { transition: none; }
+
+  .rts-{{ section.id }} .rts__media {
+    position: relative;
+    aspect-ratio: 1 / 1;
+    background: #ffffff;
+    border-radius: {{ section.settings.card_radius }}px;
+    overflow: hidden;
+  }
+  .rts-{{ section.id }} .rts__img-link { display: block; width: 100%; height: 100%; }
+  .rts-{{ section.id }} .rts__media img,
+  .rts-{{ section.id }} .rts__media > a svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    -webkit-user-drag: none;
+  }
+  .rts-{{ section.id }} .rts__media .rts__product-img {
+    position: absolute;
+    inset: 0;
+    transition: opacity 260ms ease;
+  }
+  .rts-{{ section.id }} .rts__media .rts__product-img--original { opacity: 0; }
+  .rts-{{ section.id }} .rts__img-link:hover .rts__product-img--custom,
+  .rts-{{ section.id }} .rts__img-link:focus-visible .rts__product-img--custom { opacity: 0; }
+  .rts-{{ section.id }} .rts__img-link:hover .rts__product-img--original,
+  .rts-{{ section.id }} .rts__img-link:focus-visible .rts__product-img--original { opacity: 1; }
+
+  .rts-{{ section.id }} .rts__badge {
+    position: absolute;
+    top: 8px; left: 8px;
+    padding: 4px 8px;
+    font-size: clamp(10px, 0.8cqw, 14px);
+    font-weight: 500;
+    line-height: 1.2;
+    text-transform: uppercase;
+    background: {{ section.settings.badge_bg }};
+    color: {{ section.settings.badge_text_color }};
+  }
+  .rts-{{ section.id }} .rts__heart {
+    position: absolute;
+    top: 6px; right: 6px;
+    z-index: 3;
+    width: 34px; height: 34px;
     display: flex; align-items: center; justify-content: center;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    cursor: pointer;
+  }
+  .rts-{{ section.id }} .rts__heart svg { width: 22px; height: 20px; display: block; transition: transform .25s ease; }
+  .rts-{{ section.id }} .rts__heart:hover svg { transform: scale(1.12); }
+
+  .rts-{{ section.id }} .rts__title {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    margin: 0.9cqw 4px 0.4cqw;
+    color: var(--rts-text);
+    font-size: clamp(11px, 0.95cqw, 20px);
+    font-weight: 500;
+    line-height: 1.3;
+    text-decoration: none;
+  }
+  .rts-{{ section.id }} .rts__price { font-size: clamp(11px, 0.9cqw, 18px); font-weight: 700; }
+  .rts-{{ section.id }} .rts__price s { margin-left: 6px; font-weight: 400; opacity: .6; }
+
+  /* ---------- Arrows: centred on the card image, inside the side gutter ---------- */
+  .rts-{{ section.id }} .rts__arrow {
+    position: absolute;
+    top: calc(var(--rts-pt) + var(--rts-itemw, 20cqw) / 2 - var(--rts-a) / 2);
+    z-index: 5;
+    width: var(--rts-a); height: var(--rts-a);
+    margin: 0;
+    display: flex; align-items: center; justify-content: center;
+    padding: 0;
+    border: 0;
     border-radius: 50%;
-    background: var(--tl-bg);
-    border: 2px solid var(--tl-line);
-    color: var(--tl-muted);
-    transition: border-color .5s ease, color .5s ease, background .5s ease, transform .5s cubic-bezier(.34,1.56,.64,1);
+    background: #ffffff;
+    color: #111111;
+    box-shadow: 0 2px 8px rgba(0,0,0,.18);
+    cursor: pointer;
+    transition: transform .25s ease, background .25s ease;
   }
-  .tl-{{ sid }} .tl__icon svg {
-    width: 24px; height: 24px;
-    fill: none; stroke: currentColor; stroke-width: 1.7;
-    stroke-linecap: round; stroke-linejoin: round;
+  .rts-{{ section.id }} .rts__arrow[hidden] { display: none; }
+  .rts-{{ section.id }} .rts__arrow:hover { background: #f3eee4; transform: scale(1.08); }
+  .rts-{{ section.id }} .rts__arrow:focus-visible { outline: 3px solid #fff; outline-offset: 2px; }
+  .rts-{{ section.id }} .rts__arrow svg { width: 45%; height: 45%; }
+  .rts-{{ section.id }} .rts__arrow--prev { left: var(--rts-ax); }
+  .rts-{{ section.id }} .rts__arrow--next { right: var(--rts-ax); }
+
+  /* ---------- TABLET (frame 990px): sign on top, 2 cards below ---------- */
+  @media (max-width: 990px) {
+    .rts-{{ section.id }} .rts__wrap {
+      padding: 0 10cqw;
+      grid-template-columns: minmax(0, 1fr);
+      column-gap: 0;
+      row-gap: 4.2cqw;
+    }
+    .rts-{{ section.id }} .rts__sign-col {
+      top: 0;
+      justify-self: center;
+      width: {{ section.settings.sign_width_tablet }}cqw;
+      margin-top: -{{ pull_t }}cqw;
+    }
+    .rts-{{ section.id }} .rts__slider {
+      --rts-g: 10cqw;
+      --rts-a: clamp(30px, 4.6cqw, 38px);
+      --rts-pt: {{ pt_t }}cqw;
+      --rts-pb: 4cqw;
+      --rts-ax: calc((var(--rts-g) + var(--rts-a)) / -2);
+      padding: 0;
+    }
+    .rts-{{ section.id }} .rts__title { font-size: clamp(13px, 2.1cqw, 20px); margin: 2cqw 4px 0.8cqw; }
+    .rts-{{ section.id }} .rts__price { font-size: clamp(13px, 2cqw, 18px); }
+    .rts-{{ section.id }} .rts__badge { font-size: clamp(10px, 1.5cqw, 13px); }
+    .rts-{{ section.id }} .rts__hit {
+      left: {{ section.settings.hit_left_tablet }}%;
+      top: {{ section.settings.hit_top_tablet }}%;
+      width: {{ section.settings.hit_width_tablet }}%;
+      height: {{ section.settings.hit_height_tablet }}%;
+    }
   }
 
-  /* content */
-  .tl-{{ sid }} .tl__content { grid-column: 2; padding-top: 6px; }
-  .tl-{{ sid }} .tl__step { display: block; margin-bottom: 6px; font-size: 13px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--tl-accent); }
-  .tl-{{ sid }} .tl__title { margin: 0 0 6px; font-size: 20px; font-weight: 600; line-height: 1.3; }
-  .tl-{{ sid }} .tl__text { margin: 0; color: var(--tl-muted); font-size: 15px; line-height: 1.6; }
-
-  /* ---------- Animation (only when JS is running) ---------- */
-  .tl-{{ sid }}.is-js .tl__icon { transform: scale(.7); }
-  .tl-{{ sid }}.is-js .tl__content { opacity: 0; transform: translateY(24px); transition: opacity .7s ease .1s, transform .7s ease .1s; }
-  .tl-{{ sid }}.is-js .tl__item.is-visible .tl__content { opacity: 1; transform: none; }
-  .tl-{{ sid }}.is-js .tl__item.is-visible .tl__icon {
-    transform: scale(1);
-    border-color: var(--tl-accent);
-    background: var(--tl-accent);
-    color: #fff;
+  /* ---------- MOBILE (frames 425px / 332px): sign on top, 1 card below ---------- */
+  @media (max-width: 749px) {
+    .rts-{{ section.id }} .rts__wrap { padding: 0 16cqw; row-gap: 4cqw; }
+    .rts-{{ section.id }} .rts__sign-col {
+      width: {{ section.settings.sign_width_mobile }}cqw;
+      margin-top: -{{ pull_m }}cqw;
+    }
+    .rts-{{ section.id }} .rts__slider {
+      --rts-g: 16cqw;
+      --rts-a: clamp(28px, 7.5cqw, 34px);
+      --rts-pt: {{ pt_m }}cqw;
+      --rts-pb: 5cqw;
+    }
+    .rts-{{ section.id }} .rts__title { font-size: clamp(12px, 3.5cqw, 15px); margin: 3cqw 4px 1cqw; }
+    .rts-{{ section.id }} .rts__price { font-size: clamp(12px, 3.3cqw, 14px); }
+    .rts-{{ section.id }} .rts__badge { font-size: 11px; padding: 3px 7px; }
+    .rts-{{ section.id }} .rts__hit {
+      left: {{ section.settings.hit_left_mobile }}%;
+      top: {{ section.settings.hit_top_mobile }}%;
+      width: {{ section.settings.hit_width_mobile }}%;
+      height: {{ section.settings.hit_height_mobile }}%;
+    }
   }
 
-  /* ---------- Desktop: alternate left / right around a centre line ---------- */
-  @media (min-width: 850px) {
-    .tl-{{ sid }} .tl__list::before,
-    .tl-{{ sid }} .tl__progress { left: 50%; }
-    .tl-{{ sid }} .tl__item { grid-template-columns: minmax(0, 1fr) 56px minmax(0, 1fr); column-gap: 40px; }
-    .tl-{{ sid }} .tl__icon { grid-column: 2; grid-row: 1; }
-    .tl-{{ sid }} .tl__item:nth-child(odd) .tl__content { grid-column: 1; grid-row: 1; text-align: right; }
-    .tl-{{ sid }} .tl__item:nth-child(even) .tl__content { grid-column: 3; grid-row: 1; text-align: left; }
-    .tl-{{ sid }}.is-js .tl__item:nth-child(odd) .tl__content { transform: translateX(-28px); }
-    .tl-{{ sid }}.is-js .tl__item:nth-child(even) .tl__content { transform: translateX(28px); }
-    .tl-{{ sid }}.is-js .tl__item.is-visible .tl__content { transform: none; }
-  }
+  /* No sign image uploaded (the sign is part of the background): the empty sign row must not add a gap */
+  .rts-{{ section.id }}.rts--nosign .rts__wrap { row-gap: 0; }
 
   @media (prefers-reduced-motion: reduce) {
-    .tl-{{ sid }} .tl__icon,
-    .tl-{{ sid }} .tl__content { transition: none !important; }
+    .rts-{{ section.id }} .rts__track,
+    .rts-{{ section.id }} .rts__card { transition: none; }
   }
 </style>
+<noscript><style>.rts-{{ section.id }} .rts__track { opacity: 1; overflow-x: auto; }</style></noscript>
 
-<section id="tl-{{ sid }}" class="tl-{{ sid }}" data-animate="{{ section.settings.animate }}">
-  <div class="tl__head">
-    {%- if section.settings.heading != blank -%}
-      <h2>{{ section.settings.heading }}</h2>
-    {%- endif -%}
-    {%- if section.settings.description != blank -%}
-      <p>{{ section.settings.description }}</p>
-    {%- endif -%}
+<section
+  id="rts-{{ section.id }}"
+  class="rts-{{ section.id }}{% if sign == blank %} rts--nosign{% endif %}"
+  data-desktop="{{ section.settings.cards_desktop }}"
+  data-tablet="2"
+  data-mobile="1"
+  data-gap="{{ section.settings.card_gap }}"
+  data-speed="{{ section.settings.speed }}"
+  data-autoplay="{{ section.settings.autoplay }}"
+  data-delay="{{ section.settings.autoplay_delay }}"
+>
+
+  {%- if top_d != blank -%}
+    <div class="rts__top">
+      <picture>
+        {%- if top_m != blank -%}
+          <source media="(max-width: 749px)" srcset="{{ top_m | image_url: width: 750 }} 750w, {{ top_m | image_url: width: 1100 }} 1100w" sizes="100vw">
+        {%- endif -%}
+        <img
+          src="{{ top_d | image_url: width: 1920 }}"
+          srcset="{{ top_d | image_url: width: 1100 }} 1100w, {{ top_d | image_url: width: 1920 }} 1920w, {{ top_d | image_url: width: 2560 }} 2560w"
+          sizes="100vw"
+          width="{{ top_d.width }}"
+          height="{{ top_d.height }}"
+          alt=""
+          loading="eager"
+        >
+      </picture>
+    </div>
+  {%- endif -%}
+
+  <div class="rts__wrap">
+
+    <!-- Sign -->
+    <div class="rts__sign-col">
+      <div class="rts__sign">
+        {%- if sign != blank -%}
+          <img
+            class="rts__sign-img"
+            src="{{ sign | image_url: width: 900 }}"
+            srcset="{{ sign | image_url: width: 450 }} 450w, {{ sign | image_url: width: 700 }} 700w, {{ sign | image_url: width: 900 }} 900w, {{ sign | image_url: width: 1200 }} 1200w"
+            sizes="(min-width: 991px) 24vw, 57vw"
+            width="{{ sign.width }}"
+            height="{{ sign.height }}"
+            alt="{{ section.settings.sign_title | escape }}"
+            loading="lazy"
+          >
+        {%- elsif request.design_mode -%}
+          {{ 'image' | placeholder_svg_tag }}
+        {%- endif -%}
+
+        {%- if section.settings.button_label != blank -%}
+          <div class="rts__viewall">
+            <a href="{{ view_all_url | default: '#' }}">
+              {{ section.settings.button_label }}
+              <svg width="1.1em" height="0.7em" viewBox="0 0 16 10" fill="none" aria-hidden="true"><path d="M1 5h13M10 1l4 4-4 4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </a>
+          </div>
+        {%- endif -%}
+      </div>
+    </div>
+
+    <!-- Slider -->
+    <div class="rts__slider">
+      <div class="rts__viewport" tabindex="0" role="group" aria-roledescription="carousel" aria-label="{{ section.settings.sign_title | escape }}">
+        <ul class="rts__track" role="list">
+
+          {%- if section.blocks.size > 0 -%}
+            {%- for block in section.blocks -%}
+              {%- liquid
+                assign product = block.settings.product
+                assign custom_image = block.settings.custom_image
+                assign pct = 0
+                if product != blank and product.compare_at_price > product.price
+                  assign diff = product.compare_at_price | minus: product.price
+                  assign pct = diff | times: 100.0 | divided_by: product.compare_at_price | round
+                endif
+              -%}
+              {%- if product != blank -%}
+              <li class="rts__slide" {{ block.shopify_attributes }}>
+                <article class="rts__card">
+                  <div class="rts__media">
+                    <a class="rts__img-link" href="{{ product.url }}" draggable="false" aria-label="{{ product.title | escape }}">
+                      {%- if custom_image != blank -%}
+                        <img
+                          class="rts__product-img rts__product-img--custom"
+                          src="{{ custom_image | image_url: width: 500 }}"
+                          srcset="{{ custom_image | image_url: width: 300 }} 300w, {{ custom_image | image_url: width: 500 }} 500w, {{ custom_image | image_url: width: 700 }} 700w"
+                          sizes="(min-width: 1100px) 24vw, (min-width: 750px) 30vw, 60vw"
+                          width="{{ custom_image.width }}"
+                          height="{{ custom_image.height }}"
+                          alt="{{ custom_image.alt | default: product.title | escape }}"
+                          loading="lazy"
+                          draggable="false"
+                        >
+                        {%- if product.featured_media != blank -%}
+                          <img
+                            class="rts__product-img rts__product-img--original"
+                            src="{{ product.featured_media | image_url: width: 500 }}"
+                            srcset="{{ product.featured_media | image_url: width: 300 }} 300w, {{ product.featured_media | image_url: width: 500 }} 500w, {{ product.featured_media | image_url: width: 700 }} 700w"
+                            sizes="(min-width: 1100px) 24vw, (min-width: 750px) 30vw, 60vw"
+                            width="{{ product.featured_media.width }}"
+                            height="{{ product.featured_media.height }}"
+                            alt="{{ product.featured_media.alt | default: product.title | escape }}"
+                            loading="lazy"
+                            draggable="false"
+                          >
+                        {%- endif -%}
+                      {%- elsif product.featured_media != blank -%}
+                        <img
+                          src="{{ product.featured_media | image_url: width: 500 }}"
+                          srcset="{{ product.featured_media | image_url: width: 300 }} 300w, {{ product.featured_media | image_url: width: 500 }} 500w, {{ product.featured_media | image_url: width: 700 }} 700w"
+                          sizes="(min-width: 1100px) 24vw, (min-width: 750px) 30vw, 60vw"
+                          width="{{ product.featured_media.width }}"
+                          height="{{ product.featured_media.height }}"
+                          alt="{{ product.featured_media.alt | default: product.title | escape }}"
+                          loading="lazy"
+                          draggable="false"
+                        >
+                      {%- else -%}
+                        {{ 'product-1' | placeholder_svg_tag }}
+                      {%- endif -%}
+                    </a>
+                    {%- if pct > 0 -%}
+                      <span class="rts__badge">{% if section.settings.badge_text != blank %}{{ section.settings.badge_text }}{% else %}{{ pct }}% off{% endif %}</span>
+                    {%- endif -%}
+                    <button
+                      type="button"
+                      class="wishlist-btn card__wishlist cart-wishlist-icon rts__heart"
+                      aria-label="Add to wishlist"
+                      data-product-handle="{{ product.handle }}"
+                    >
+                      <svg width="21" height="20" viewBox="0 0 21 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path d="M5.89583 0.75C3.05425 0.75 0.75 3.19833 0.75 6.21758C0.75 12.2604 10.5 19.1667 10.5 19.1667C10.5 19.1667 20.25 12.2604 20.25 6.21758C20.25 2.47683 17.9458 0.75 15.1042 0.75C13.0892 0.75 11.345 1.98067 10.5 3.7725C9.655 1.98067 7.91083 0.75 5.89583 0.75Z" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" stroke="black"/>
+</svg>
+
+                    </button>
+                  </div>
+                  <a class="rts__title" href="{{ product.url }}" draggable="false">{{ product.title }}</a>
+                  <div class="rts__price">
+                    <span>{{ product.price | money }}</span>
+                    {%- if product.compare_at_price > product.price -%}<s>{{ product.compare_at_price | money }}</s>{%- endif -%}
+                  </div>
+                </article>
+              </li>
+              {%- endif -%}
+            {%- endfor -%}
+          {%- elsif request.design_mode -%}
+            {%- for i in (1..6) -%}
+              <li class="rts__slide">
+                <article class="rts__card">
+                  <div class="rts__media">
+                    <a class="rts__img-link" href="#" draggable="false">{{ 'product-1' | placeholder_svg_tag }}</a>
+                    <span class="rts__badge">50% off</span>
+                  </div>
+                  <a class="rts__title" href="#" draggable="false">Add product blocks in the theme editor</a>
+                  <div class="rts__price"><span>$164.50</span><s>$235.00</s></div>
+                </article>
+              </li>
+            {%- endfor -%}
+          {%- endif -%}
+
+        </ul>
+      </div>
+
+      <button type="button" class="rts__arrow rts__arrow--prev" aria-label="Previous products">
+        <svg viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M10 2L4 8l6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+      <button type="button" class="rts__arrow rts__arrow--next" aria-label="Next products">
+        <svg viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M6 2l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+    </div>
   </div>
 
-  <ol class="tl__list">
-    <span class="tl__progress" aria-hidden="true"></span>
+  {%- if section.settings.area_link != blank -%}
+    <a class="rts__hit" href="{{ section.settings.area_link }}" aria-label="{{ section.settings.sign_title | escape }}"></a>
+  {%- endif -%}
 
-    {%- for block in section.blocks -%}
-      <li class="tl__item" {{ block.shopify_attributes }}>
-        <div class="tl__icon" aria-hidden="true">
-          <svg viewBox="0 0 24 24" focusable="false">
-            {%- case block.settings.icon -%}
-              {%- when 'star' -%}
-                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
-              {%- when 'heart' -%}
-                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
-              {%- when 'clock' -%}
-                <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
-              {%- when 'gift' -%}
-                <polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5"/><line x1="12" y1="22" x2="12" y2="7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/>
-              {%- when 'truck' -%}
-                <rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/>
-              {%- when 'shield' -%}
-                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-              {%- when 'flag' -%}
-                <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/>
-              {%- when 'mail' -%}
-                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22 6 12 13 2 6"/>
-              {%- when 'box' -%}
-                <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/>
-              {%- when 'pin' -%}
-                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>
-              {%- else -%}
-                <polyline points="20 6 9 17 4 12"/>
-            {%- endcase -%}
-          </svg>
-        </div>
-
-        <div class="tl__content">
-          {%- if block.settings.step != blank -%}<span class="tl__step">{{ block.settings.step }}</span>{%- endif -%}
-          {%- if block.settings.title != blank -%}<h3 class="tl__title">{{ block.settings.title }}</h3>{%- endif -%}
-          {%- if block.settings.text != blank -%}<p class="tl__text">{{ block.settings.text }}</p>{%- endif -%}
-        </div>
-      </li>
-    {%- endfor -%}
-  </ol>
+  {%- if bottom_d != blank -%}
+    <div class="rts__bottom">
+      <picture>
+        {%- if bottom_m != blank -%}
+          <source media="(max-width: 749px)" srcset="{{ bottom_m | image_url: width: 750 }} 750w, {{ bottom_m | image_url: width: 1100 }} 1100w" sizes="100vw">
+        {%- endif -%}
+        <img
+          src="{{ bottom_d | image_url: width: 1920 }}"
+          srcset="{{ bottom_d | image_url: width: 1100 }} 1100w, {{ bottom_d | image_url: width: 1920 }} 1920w, {{ bottom_d | image_url: width: 2560 }} 2560w"
+          sizes="100vw"
+          width="{{ bottom_d.width }}"
+          height="{{ bottom_d.height }}"
+          alt=""
+          loading="lazy"
+        >
+      </picture>
+    </div>
+  {%- endif -%}
 </section>
 
 <script>
 (function () {
-  var root = document.getElementById('tl-{{ sid }}');
-  if (!root) return;
+  var root = document.getElementById('rts-{{ section.id }}');
+  if (!root || root.dataset.rtsInitialized === 'true') return;
+  root.dataset.rtsInitialized = 'true';
 
-  var items = root.querySelectorAll('.tl__item');
-  var list = root.querySelector('.tl__list');
+  var viewport = root.querySelector('.rts__viewport');
+  var track    = root.querySelector('.rts__track');
+  var prevBtn  = root.querySelector('.rts__arrow--prev');
+  var nextBtn  = root.querySelector('.rts__arrow--next');
+  if (!viewport || !track || !prevBtn || !nextBtn) return;
+
+  var slides = Array.prototype.slice.call(track.children); /* the real slides */
+  var n = slides.length;
+  if (!n) return;
+
+  var cfg = {
+    desktop: parseFloat(root.dataset.desktop) || 3,
+    tablet:  2,
+    mobile:  1,
+    gap:     parseFloat(root.dataset.gap)     || 20,
+    speed:   parseInt(root.dataset.speed, 10) || 700,
+    autoplay: root.dataset.autoplay === 'true',
+    delay:   (parseInt(root.dataset.delay, 10) || 4) * 1000
+  };
   var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  var animate = root.dataset.animate === 'true' && !reduce && 'IntersectionObserver' in window;
 
-  /* no animation: show everything and fill the line */
-  if (!animate) {
-    items.forEach(function (el) { el.classList.add('is-visible'); });
-    list.style.setProperty('--tl-progress', 1);
-    return;
+  /* same breakpoints as the CSS: desktop 991+, tablet 750-990, mobile below 750 */
+  var mqDesktop = window.matchMedia('(min-width: 991px)');
+  var mqTablet  = window.matchMedia('(min-width: 750px)');
+
+  /*
+    INFINITE LOOP
+    The track holds:  [k clones of the last slides] [real slides] [k clones of the first slides]
+    `pos` is an index in that full list. After each move that lands on a clone, the track
+    silently jumps (no animation) to the identical real slide, so the loop never ends.
+  */
+  var ext = slides.slice();   /* every slide in the track (clones + real) */
+  var k = 0;                  /* number of clones on each side */
+  var looping = false;
+  var pos = 0, activeOffset = 0, busy = false, settleTimer = null;
+  var W = 0, itemW = 0, gap = 0, step = 0, timer = null;
+
+  function mod(a, b) { return ((a % b) + b) % b; }
+
+  function perView() {
+    if (mqDesktop.matches) return cfg.desktop;
+    if (mqTablet.matches)  return cfg.tablet;
+    return cfg.mobile;
   }
 
-  root.classList.add('is-js');
-
-  /* items reveal one by one when scrolled into view */
-  var io = new IntersectionObserver(function (entries) {
-    entries.forEach(function (e) {
-      if (e.isIntersecting) { e.target.classList.add('is-visible'); io.unobserve(e.target); }
-    });
-  }, { threshold: 0.35 });
-  items.forEach(function (el) { io.observe(el); });
-
-  /* progress line follows the scroll */
-  var ticking = false;
-  function update() {
-    ticking = false;
-    var r = list.getBoundingClientRect();
-    var p = (window.innerHeight * 0.6 - r.top) / r.height;
-    list.style.setProperty('--tl-progress', Math.max(0, Math.min(1, p)).toFixed(4));
+  /* gap scales with the section width, so spacing matches the Figma frame on every screen */
+  function gapFor(rw) {
+    if (mqDesktop.matches) return Math.round(cfg.gap * rw / 1920);
+    if (mqTablet.matches)  return Math.round(cfg.gap * 0.6 * rw / 990);
+    return Math.round(cfg.gap * 0.6);
   }
-  function onScroll() { if (!ticking) { ticking = true; requestAnimationFrame(update); } }
-  window.addEventListener('scroll', onScroll, { passive: true });
-  window.addEventListener('resize', onScroll);
-  update();
+
+  function makeClone(el) {
+    var c = el.cloneNode(true);
+    c.classList.add('rts__clone');
+    c.classList.remove('is-active');
+    c.setAttribute('aria-hidden', 'true');
+    c.removeAttribute('data-shopify-editor-block');
+    Array.prototype.forEach.call(c.querySelectorAll('a, button'), function (x) { x.setAttribute('tabindex', '-1'); });
+    return c;
+  }
+
+  function buildClones(v) {
+    Array.prototype.forEach.call(track.querySelectorAll('.rts__clone'), function (c) { c.remove(); });
+    ext = slides.slice();
+    k = 0;
+    looping = n > Math.floor(v);   /* nothing to loop when every card already fits */
+    if (!looping) return;
+
+    k = Math.ceil(v) + 1;
+    var before = [], after = [], i;
+    for (i = 0; i < k; i++) {
+      before.push(makeClone(slides[mod(n - k + i, n)]));
+      after.push(makeClone(slides[i % n]));
+    }
+    before.forEach(function (c) { track.insertBefore(c, slides[0]); });
+    after.forEach(function (c) { track.appendChild(c); });
+    ext = before.concat(slides, after);
+  }
+
+  function offsetFor(p) { return -(p * step); }
+
+  function markActive() {
+    var act = Math.min(pos + activeOffset, ext.length - 1);
+    ext.forEach(function (s, idx) { s.classList.toggle('is-active', idx === act); });
+  }
+
+  function setPos(animate) {
+    if (!animate) {
+      root.classList.add('is-jumping');
+      track.style.transition = 'none';
+    } else {
+      track.style.transition = '';
+    }
+    track.style.transform = 'translate3d(' + offsetFor(pos) + 'px,0,0)';
+    markActive();
+    if (!animate) {
+      void track.offsetWidth;
+      track.style.transition = '';
+      root.classList.remove('is-jumping');
+    }
+  }
+
+  /* after an animated move: if we are on a clone, jump to the real twin */
+  function settle() {
+    clearTimeout(settleTimer);
+    if (looping) {
+      if (pos >= k + n) pos -= n;
+      else if (pos < k) pos += n;
+      setPos(false);
+    }
+    busy = false;
+  }
+
+  function layout() {
+    var v = perView();
+    W = viewport.clientWidth;
+    if (!W) return;
+
+    var real = looping ? mod(pos - k, n) : 0;   /* remember which real slide we are on */
+
+    buildClones(v);
+    gap = gapFor(root.clientWidth);
+    itemW = (W - gap * (v - 1)) / v;
+    step = itemW + gap;
+    ext.forEach(function (s) { s.style.width = itemW + 'px'; s.style.marginRight = gap + 'px'; });
+    /* the arrows use the card width to sit exactly in the middle of the card image */
+    root.style.setProperty('--rts-itemw', itemW + 'px');
+
+    activeOffset = v >= 3 ? 1 : 0;   /* desktop: 2nd visible card is the big one */
+    pos = looping ? k + real : 0;
+    busy = false;
+    clearTimeout(settleTimer);
+
+    prevBtn.hidden = nextBtn.hidden = !looping;
+
+    setPos(false);
+    root.classList.add('is-ready');
+  }
+
+  function go(d) {
+    if (!looping || busy) return;
+    busy = true;
+    pos += d;
+    setPos(true);
+    clearTimeout(settleTimer);
+    settleTimer = setTimeout(settle, reduce ? 0 : cfg.speed + 40);
+  }
+
+  /* ---- autoplay (loops forever, always moving forward) ---- */
+  function start() {
+    if (!cfg.autoplay || reduce || timer || !looping) return;
+    timer = setInterval(function () {
+      if (document.hidden) return;
+      go(1);
+    }, cfg.delay);
+  }
+  function stop() { clearInterval(timer); timer = null; }
+  function restart() { stop(); start(); }
+
+  /* ---- arrows + keyboard ---- */
+  prevBtn.addEventListener('click', function () { go(-1); restart(); });
+  nextBtn.addEventListener('click', function () { go(1); restart(); });
+  viewport.addEventListener('keydown', function (e) {
+    if (e.key === 'ArrowLeft')  { go(-1); restart(); }
+    if (e.key === 'ArrowRight') { go(1);  restart(); }
+  });
+
+  /* ---- swipe / drag ---- */
+  var startX = 0, dx = 0, dragging = false, moved = false;
+  viewport.addEventListener('pointerdown', function (e) {
+    if (e.pointerType === 'mouse' && e.button !== 0) return;
+    if (busy) return;
+    dragging = true; moved = false; startX = e.clientX; dx = 0;
+  });
+  viewport.addEventListener('pointermove', function (e) {
+    if (!dragging || !looping) return;
+    dx = e.clientX - startX;
+    if (Math.abs(dx) > 6) {
+      moved = true;
+      track.style.transition = 'none';
+      track.style.transform = 'translate3d(' + (offsetFor(pos) + dx) + 'px,0,0)';
+    }
+  });
+  function endDrag() {
+    if (!dragging) return;
+    dragging = false;
+    if (!moved) return;
+    track.style.transition = '';
+    if (Math.abs(dx) > step * 0.18) { go(dx < 0 ? 1 : -1); } else { setPos(true); }
+    restart();
+  }
+  viewport.addEventListener('pointerup', endDrag);
+  viewport.addEventListener('pointercancel', endDrag);
+  viewport.addEventListener('pointerleave', endDrag);
+  viewport.addEventListener('click', function (e) {
+    if (moved) { e.preventDefault(); e.stopPropagation(); moved = false; }
+  }, true);
+
+  root.addEventListener('mouseenter', stop);
+  root.addEventListener('mouseleave', start);
+  root.addEventListener('focusin', stop);
+  root.addEventListener('focusout', start);
+  document.addEventListener('visibilitychange', function () { if (document.hidden) { stop(); } else { start(); } });
+
+  /* ---- resize ---- */
+  var raf = null;
+  window.addEventListener('resize', function () {
+    if (raf) cancelAnimationFrame(raf);
+    raf = requestAnimationFrame(layout);
+  });
+  window.addEventListener('load', layout);
+
+  layout();
+  start();
+
+  document.addEventListener('shopify:section:unload', function (e) {
+    if (e.detail && e.detail.sectionId === '{{ section.id }}') { stop(); clearTimeout(settleTimer); }
+  });
 })();
 </script>
 
 {% schema %}
-{
-  "name": "Timeline",
+{ 
+  "name": "Ready to ship slider",
   "tag": "div",
-  "class": "section-timeline",
+  "class": "section-ready-to-ship-slider",
   "settings": [
-    { "type": "header", "content": "Content" },
-    { "type": "text", "id": "heading", "label": "Heading", "default": "Our Journey" },
-    { "type": "textarea", "id": "description", "label": "Description", "default": "A few simple steps that show how we got here." },
+    { "type": "header", "content": "Section background image" },
+    { "type": "paragraph", "content": "Upload a separate background for each device. If tablet or mobile is empty, the next larger image is used. The section takes the shape of the image." },
+    { "type": "image_picker", "id": "bg_image", "label": "Background image (desktop, 991px and up)", "info": "Export from Figma at the exact frame size" },
+    { "type": "image_picker", "id": "bg_image_tablet", "label": "Background image (tablet, 750px to 990px)", "info": "Falls back to the desktop image" },
+    { "type": "image_picker", "id": "bg_image_mobile", "label": "Background image (mobile, below 750px)", "info": "Falls back to the tablet image" },
+    {
+      "type": "select", "id": "bg_size", "label": "Background size",
+      "options": [
+        { "value": "cover", "label": "Cover (fill the section)" },
+        { "value": "contain", "label": "Contain (show the whole image)" },
+        { "value": "100% 100%", "label": "Stretch" },
+        { "value": "100% auto", "label": "Full width" }
+      ],
+      "default": "cover"
+    },
+    { "type": "color", "id": "bg_overlay", "label": "Overlay colour", "default": "#000000", "info": "Optional dark layer over the image to keep the text readable" },
+    { "type": "range", "id": "bg_overlay_opacity", "label": "Overlay opacity (%)", "min": 0, "max": 90, "step": 5, "default": 0 },
 
-    { "type": "header", "content": "Animation" },
-    { "type": "checkbox", "id": "animate", "label": "Animate on scroll", "default": true },
+    { "type": "header", "content": "Top image (garland)" },
+    { "type": "paragraph", "content": "Sits above the sign, so the sign ropes tuck behind it. Use a PNG/WebP with a transparent background." },
+    { "type": "image_picker", "id": "top_image", "label": "Top image (desktop)" },
+    { "type": "image_picker", "id": "top_image_mobile", "label": "Top image (mobile)", "info": "Optional - falls back to the desktop image" },
 
-    { "type": "header", "content": "Colours" },
-    { "type": "color", "id": "bg_color", "label": "Background", "default": "#ffffff" },
-    { "type": "color", "id": "text_color", "label": "Text", "default": "#111111" },
-    { "type": "color", "id": "muted_color", "label": "Muted text and icons", "default": "#6b6b6b" },
-    { "type": "color", "id": "accent_color", "label": "Accent", "default": "#0c60a5" },
-    { "type": "color", "id": "line_color", "label": "Line", "default": "#e3e3e3" },
+    { "type": "header", "content": "Slider position (match Figma)" },
+    { "type": "paragraph", "content": "Use this when the wooden sign is part of the background image. It pushes the cards down so they start below the sign, exactly like Figma. Measured from the bottom of the top image to the top of the cards, in Figma pixels. If you upload a Sign image below instead, set tablet and mobile to 0." },
+    { "type": "range", "id": "slider_top_desktop", "label": "Space above cards - desktop (Figma px, 1920 frame)", "min": 0, "max": 600, "step": 6, "default": 114 },
+    { "type": "range", "id": "slider_top_tablet", "label": "Space above cards - tablet (Figma px, 990 frame)", "min": 0, "max": 800, "step": 8, "default": 0 },
+    { "type": "range", "id": "slider_top_mobile", "label": "Space above cards - mobile (Figma px, 425 frame)", "min": 0, "max": 400, "step": 4, "default": 0 },
 
-    { "type": "header", "content": "Spacing" },
-    { "type": "range", "id": "padding_top", "label": "Padding top (px)", "min": 0, "max": 160, "step": 4, "default": 64 },
-    { "type": "range", "id": "padding_bottom", "label": "Padding bottom (px)", "min": 0, "max": 160, "step": 4, "default": 64 }
+    { "type": "header", "content": "Wooden sign" },
+    { "type": "image_picker", "id": "sign_image", "label": "Sign image", "info": "Wooden board PNG with transparent background" },
+    { "type": "range", "id": "sign_width", "label": "Sign width - desktop (% of section width)", "min": 15, "max": 35, "step": 0.5, "default": 23 },
+    { "type": "range", "id": "sign_width_tablet", "label": "Sign width - tablet (% of section width)", "min": 30, "max": 70, "step": 1, "default": 45 },
+    { "type": "range", "id": "sign_width_mobile", "label": "Sign width - mobile (% of section width)", "min": 35, "max": 80, "step": 1, "default": 57 },
+    { "type": "range", "id": "sign_pull_desktop", "label": "Sign pull up behind garland - desktop (Figma px, 1920 frame)", "min": 0, "max": 200, "step": 2, "default": 24 },
+    { "type": "range", "id": "sign_pull_tablet", "label": "Sign pull up behind garland - tablet (Figma px, 990 frame)", "min": 0, "max": 200, "step": 2, "default": 20 },
+    { "type": "range", "id": "sign_pull_mobile", "label": "Sign pull up behind garland - mobile (Figma px, 425 frame)", "min": 0, "max": 200, "step": 2, "default": 12 },
+    { "type": "text", "id": "sign_title", "label": "Sign title", "default": "Ready to Ship Collection" },
+    { "type": "color", "id": "sign_text_color", "label": "Sign text colour", "default": "#ffffff" },
+    { "type": "text", "id": "button_label", "label": "View all label", "info": "Optional. Leave empty if the button is already part of the sign image or the background image" },
+    { "type": "url", "id": "button_link", "label": "View all link" },
+    {
+      "type": "select", "id": "button_style", "label": "View all style",
+      "options": [
+        { "value": "text", "label": "Text only (button is already in the sign image)" },
+        { "value": "wooden", "label": "Wooden button (drawn with CSS)" }
+      ],
+      "default": "text"
+    },
+    { "type": "range", "id": "button_bottom", "label": "View all position from bottom of sign (%)", "min": 0, "max": 40, "step": 1, "default": 4 },
+
+    { "type": "header", "content": "Clickable left area" },
+    { "type": "paragraph", "content": "Invisible link over the sign area of the background image. In the theme editor a dashed outline shows the area." },
+    { "type": "url", "id": "area_link", "label": "Area link" },
+
+    { "type": "range", "id": "hit_left",   "label": "Desktop - left (%)",   "min": 0, "max": 100, "step": 1, "default": 4 },
+    { "type": "range", "id": "hit_top",    "label": "Desktop - top (%)",    "min": 0, "max": 100, "step": 1, "default": 12 },
+    { "type": "range", "id": "hit_width",  "label": "Desktop - width (%)",  "min": 5, "max": 100, "step": 1, "default": 24 },
+    { "type": "range", "id": "hit_height", "label": "Desktop - height (%)", "min": 5, "max": 100, "step": 1, "default": 80 },
+
+    { "type": "range", "id": "hit_left_tablet",   "label": "Tablet - left (%)",   "min": 0, "max": 100, "step": 1, "default": 25 },
+    { "type": "range", "id": "hit_top_tablet",    "label": "Tablet - top (%)",    "min": 0, "max": 100, "step": 1, "default": 5 },
+    { "type": "range", "id": "hit_width_tablet",  "label": "Tablet - width (%)",  "min": 5, "max": 100, "step": 1, "default": 50 },
+    { "type": "range", "id": "hit_height_tablet", "label": "Tablet - height (%)", "min": 5, "max": 100, "step": 1, "default": 40 },
+
+    { "type": "range", "id": "hit_left_mobile",   "label": "Mobile - left (%)",   "min": 0, "max": 100, "step": 1, "default": 20 },
+    { "type": "range", "id": "hit_top_mobile",    "label": "Mobile - top (%)",    "min": 0, "max": 100, "step": 1, "default": 5 },
+    { "type": "range", "id": "hit_width_mobile",  "label": "Mobile - width (%)",  "min": 5, "max": 100, "step": 1, "default": 60 },
+    { "type": "range", "id": "hit_height_mobile", "label": "Mobile - height (%)", "min": 5, "max": 100, "step": 1, "default": 35 },
+
+    { "type": "header", "content": "Products slider" },
+    { "type": "paragraph", "content": "Add a product block for every slide. Each block supports a custom image; hovering it shows the selected product's featured image. The slider loops continuously." },
+    { "type": "range", "id": "cards_desktop", "label": "Cards visible - desktop", "min": 2.5, "max": 5, "step": 0.1, "default": 3, "info": "Set 3 for exactly 3 cards. Tablet always shows 2 cards, mobile 1 card." },
+    { "type": "range", "id": "card_gap", "label": "Gap between cards (px at 1920 width)", "min": 8, "max": 48, "step": 2, "default": 20, "info": "Scales down automatically on smaller screens" },
+    { "type": "range", "id": "center_scale", "label": "Centre card size (%)", "min": 100, "max": 130, "step": 1, "default": 110, "info": "Desktop only. Above 110 the centre card starts to overlap its neighbours" },
+    { "type": "range", "id": "card_radius", "label": "Image corner radius (px)", "min": 0, "max": 20, "step": 1, "default": 0 },
+    { "type": "range", "id": "speed", "label": "Slide animation speed (ms)", "min": 300, "max": 1500, "step": 100, "default": 700 },
+    { "type": "checkbox", "id": "autoplay", "label": "Autoplay", "default": true },
+    { "type": "range", "id": "autoplay_delay", "label": "Autoplay delay (seconds)", "min": 2, "max": 10, "step": 1, "default": 4 },
+    { "type": "text", "id": "badge_text", "label": "Badge text", "info": "Leave empty to show the real discount, calculated from the compare-at price" },
+    { "type": "color", "id": "badge_bg", "label": "Badge background", "default": "#b8975f" },
+    { "type": "color", "id": "badge_text_color", "label": "Badge text colour", "default": "#ffffff" },
+
+    { "type": "header", "content": "Bottom image (snow)" },
+    { "type": "image_picker", "id": "bottom_image", "label": "Bottom image (desktop)", "info": "Optional" },
+    { "type": "image_picker", "id": "bottom_image_mobile", "label": "Bottom image (mobile)", "info": "Optional - falls back to the desktop image" },
+    { "type": "range", "id": "bottom_pull", "label": "Pull snow up (Figma px, 1920 frame)", "min": 0, "max": 120, "step": 4, "default": 0, "info": "Scales with the screen width" },
+
+    { "type": "header", "content": "Background & layout" },
+    { "type": "color", "id": "bg_color", "label": "Background colour (top / main)", "default": "#0C60A5" },
+    { "type": "color", "id": "bg_color_light", "label": "Background colour (bottom glow)", "default": "#4C93D0" },
+    { "type": "color", "id": "text_color", "label": "Product text colour", "default": "#ffffff" },
+    { "type": "range", "id": "padding_bottom", "label": "Padding bottom (px)", "min": 0, "max": 120, "step": 4, "default": 0 }
   ],
   "blocks": [
     {
-      "type": "step",
-      "name": "Step",
+      "type": "product",
+      "name": "Product",
       "settings": [
-        {
-          "type": "select", "id": "icon", "label": "Icon",
-          "options": [
-            { "value": "check", "label": "Check" },
-            { "value": "star", "label": "Star" },
-            { "value": "heart", "label": "Heart" },
-            { "value": "clock", "label": "Clock" },
-            { "value": "gift", "label": "Gift" },
-            { "value": "truck", "label": "Truck" },
-            { "value": "shield", "label": "Shield" },
-            { "value": "flag", "label": "Flag" },
-            { "value": "mail", "label": "Mail" },
-            { "value": "box", "label": "Box" },
-            { "value": "pin", "label": "Location pin" }
-          ],
-          "default": "check"
-        },
-        { "type": "text", "id": "step", "label": "Label (date or step)", "default": "Step 1" },
-        { "type": "text", "id": "title", "label": "Title", "default": "Title goes here" },
-        { "type": "textarea", "id": "text", "label": "Text", "default": "A short description of this step in the timeline." }
+        { "type": "product", "id": "product", "label": "Product" },
+        { "type": "image_picker", "id": "custom_image", "label": "Custom image", "info": "Shown normally. On hover, the selected product's featured image is shown." }
       ]
     }
   ],
-  "max_blocks": 12,
+  "max_blocks": 24,
   "presets": [
     {
-      "name": "Timeline",
+      "name": "Ready to ship slider",
       "blocks": [
-        { "type": "step", "settings": { "icon": "flag", "step": "2019", "title": "We started", "text": "Our first collection launched from a small studio." } },
-        { "type": "step", "settings": { "icon": "box", "step": "2021", "title": "Went worldwide", "text": "We began shipping to customers in over 40 countries." } },
-        { "type": "step", "settings": { "icon": "star", "step": "2023", "title": "Award winning", "text": "Recognised for craftsmanship and customer service." } },
-        { "type": "step", "settings": { "icon": "heart", "step": "Today", "title": "Still growing", "text": "Thank you for being part of the story." } }
+        { "type": "product" },
+        { "type": "product" },
+        { "type": "product" },
+        { "type": "product" }
       ]
     }
   ]
