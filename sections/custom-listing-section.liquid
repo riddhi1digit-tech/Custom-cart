@@ -340,9 +340,10 @@
       --rts-a: clamp(30px, 4.6cqw, 38px);
       --rts-pt: {{ pt_t }}cqw;
       --rts-pb: 4cqw;
-      --rts-ax: calc((var(--rts-g) + var(--rts-a)) / -2);
+      --rts-ax: 470px + var(--rts-a)) / -2);
       padding: 0;
     }
+    .rts-{{ section.id }} .rts__title { font-size: cl
     .rts-{{ section.id }} .rts__title { font-size: clamp(13px, 2.1cqw, 20px); margin: 2cqw 4px 0.8cqw; }
     .rts-{{ section.id }} .rts__price { font-size: clamp(13px, 2cqw, 18px); }
     .rts-{{ section.id }} .rts__badge { font-size: clamp(10px, 1.5cqw, 13px); }
