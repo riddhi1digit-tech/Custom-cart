@@ -159,9 +159,9 @@
             "customer_detail": "Verified customer",
             "desktop_width_percent": 100,
             "heading_font": "assistant_n4",
-            "background_color": "#F3F3F3",
+            "background_color": "#f3f3f3",
             "text_color": "#121212",
-            "accent_color": "#5A4033"
+            "accent_color": "#5a4033"
           },
           "blocks": {}
         }
@@ -170,6 +170,66 @@
         "ai_gen_block_2ec0fe7_at34a6"
       ],
       "settings": {}
+    },
+    "custom_listing_section_MaQbYW": {
+      "type": "custom-listing-section",
+      "blocks": {
+        "step_VqbNrU": {
+          "type": "step",
+          "settings": {
+            "icon": "shield",
+            "step": "2019",
+            "title": "We started",
+            "text": "Our first collection launched from a small studio."
+          }
+        },
+        "step_imgkmk": {
+          "type": "step",
+          "settings": {
+            "icon": "box",
+            "step": "2021",
+            "title": "Went worldwide",
+            "text": "We began shipping to customers in over 40 countries."
+          }
+        },
+        "step_EapBCL": {
+          "type": "step",
+          "settings": {
+            "icon": "star",
+            "step": "2023",
+            "title": "Award winning",
+            "text": "Recognised for craftsmanship and customer service."
+          }
+        },
+        "step_7bRzDU": {
+          "type": "step",
+          "settings": {
+            "icon": "heart",
+            "step": "Today",
+            "title": "Still growing",
+            "text": "Thank you for being part of the story."
+          }
+        }
+      },
+      "block_order": [
+        "step_VqbNrU",
+        "step_imgkmk",
+        "step_EapBCL",
+        "step_7bRzDU"
+      ],
+      "name": "Timeline",
+      "settings": {
+        "heading": "Our Journey",
+        "description": "A few simple steps that show how we got here.",
+        "animate": true,
+        "bg_color": "#ffffff",
+        "text_color": "#111111",
+        "muted_color": "#6b6b6b",
+        "accent_color": "#0c60a5",
+        "line_color": "#e3e3e3",
+        "padding_top": 64,
+        "padding_bottom": 64
+      }
     }
   },
   "order": [
@@ -177,6 +237,7 @@
     "1795243640e733cbc5",
     "multirow_teKUVJ",
     "contact_form_xCtfkk",
-    "179526174166d22206"
+    "179526174166d22206",
+    "custom_listing_section_MaQbYW"
   ]
 }
