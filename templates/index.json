@@ -75,76 +75,6 @@
       ],
       "settings": {}
     },
-    "multirow_teKUVJ": {
-      "type": "multirow",
-      "blocks": {
-        "row_BBEhRx": {
-          "type": "row",
-          "settings": {
-            "image": "shopify://shop_images/round-cut-lab-diamond-half-tennis-bracelet-model-shoot.png",
-            "caption": "Caption",
-            "heading": "Row",
-            "text": "<p>Pair text with an image to focus on your chosen product, collection, or blog post. Add details on availability, style, or even provide a review.</p>",
-            "button_label": "Button label",
-            "button_link": ""
-          }
-        },
-        "row_zFVHTY": {
-          "type": "row",
-          "settings": {
-            "image": "shopify://shop_images/round-cut-diamond-bridal-ring-set-model-photoshoot.png",
-            "caption": "Caption",
-            "heading": "Row",
-            "text": "<p>Pair text with an image to focus on your chosen product, collection, or blog post. Add details on availability, style, or even provide a review.</p>",
-            "button_label": "Button label",
-            "button_link": ""
-          }
-        },
-        "row_K4HHDJ": {
-          "type": "row",
-          "settings": {
-            "image": "shopify://shop_images/model-wearing-the-blue-and-gold-drop-earrings.png",
-            "caption": "Caption",
-            "heading": "Row",
-            "text": "<p>Pair text with an image to focus on your chosen product, collection, or blog post. Add details on availability, style, or even provide a review.</p>",
-            "button_label": "Button label",
-            "button_link": ""
-          }
-        }
-      },
-      "block_order": [
-        "row_BBEhRx",
-        "row_zFVHTY",
-        "row_K4HHDJ"
-      ],
-      "name": "t:sections.multirow.presets.name",
-      "settings": {
-        "image_height": "medium",
-        "desktop_image_width": "medium",
-        "image_layout": "alternate-left",
-        "heading_size": "h1",
-        "text_style": "body",
-        "button_style": "secondary",
-        "desktop_content_position": "middle",
-        "desktop_content_alignment": "left",
-        "mobile_content_alignment": "left",
-        "section_color_scheme": "",
-        "row_color_scheme": "",
-        "padding_top": 36,
-        "padding_bottom": 36
-      }
-    },
-    "contact_form_xCtfkk": {
-      "type": "contact-form",
-      "name": "t:sections.contact-form.presets.name",
-      "settings": {
-        "heading": "Contact form",
-        "heading_size": "h1",
-        "color_scheme": "",
-        "padding_top": 36,
-        "padding_bottom": 36
-      }
-    },
     "179526174166d22206": {
       "type": "_blocks",
       "blocks": {
@@ -246,8 +176,6 @@
   "order": [
     "image_banner",
     "1795243640e733cbc5",
-    "multirow_teKUVJ",
-    "contact_form_xCtfkk",
     "179526174166d22206",
     "custom_listing_section_MaQbYW"
   ]
