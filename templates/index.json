@@ -209,13 +209,23 @@
             "title": "Still growing",
             "text": "Thank you for being part of the story."
           }
+        },
+        "step_e3YqxB": {
+          "type": "step",
+          "settings": {
+            "icon": "pin",
+            "step": "Step 1",
+            "title": "Title goes here",
+            "text": "A short description of this step in the timeline."
+          }
         }
       },
       "block_order": [
         "step_VqbNrU",
         "step_imgkmk",
         "step_EapBCL",
-        "step_7bRzDU"
+        "step_7bRzDU",
+        "step_e3YqxB"
       ],
       "name": "Timeline",
       "settings": {
