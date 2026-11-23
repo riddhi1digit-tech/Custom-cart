@@ -157,6 +157,7 @@
             "testimonial": "<p>Share a genuine customer story here. A personal detail makes this editorial feature feel warm, memorable, and authentic.</p>",
             "customer_name": "Customer name",
             "customer_detail": "Verified customer",
+            "image": "shopify://shop_images/luxury-jewelry-model-portrait.png",
             "desktop_width_percent": 100,
             "heading_font": "assistant_n4",
             "background_color": "#f3f3f3",
